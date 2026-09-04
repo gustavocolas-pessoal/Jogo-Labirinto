@@ -9,7 +9,7 @@ Projeto que visa oferecer uma maneira lúdica de aprender algoritmos computacion
 
 1. Baixe ou clone o repositório e extraia os arquivos em uma pasta
 
-2. Com o seu editor (preferencialmente o VSCode), vá em *File*, *Open Folder* e selecione a pasta **Projeto Final**
+2. Com o seu editor (preferencialmente o VSCode), vá em *File*, *Open Folder* e selecione a pasta **IPA labirinto**
 
 3. Instale as dependências com o comando:
 ```sh
