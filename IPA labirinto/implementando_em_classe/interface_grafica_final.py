@@ -4,11 +4,11 @@ import sys
 import gera_labirintos as gl
 from robo import Robo
 
-# VARIÁVEIS!!!!!
+# VARIÁVEIS:
 
-SIZE = 10
-PORTAL = False
-QUANTAS_CHAVES = 4
+SIZE = 10 # variável!
+PORTAL = True # variável!
+QUANTAS_CHAVES = 4 # variável!
 
 
 lista_labirintos = [
@@ -147,9 +147,12 @@ def desenha_paredes(qual):
             preto,
             (
                 x,y,
-                tamanho_celula,4
-            )
-        )
+                tamanho_celula,4))
+    
+    texto_qual_labirinto = arial.render(
+        f"LABIRINTO {lista_labirintos.index(qual)+1}:", True, preto)
+
+    tela.blit(texto_qual_labirinto, (50,10))
 
     for pv in qual[1]:
 
