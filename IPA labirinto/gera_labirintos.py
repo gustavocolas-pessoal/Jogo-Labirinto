@@ -141,6 +141,7 @@ def gerador_labirintos(tamanho_do_grafo = 8, quer_portal = False, quantas_chaves
     quantas_chaves_real = min(quantas_chaves,indice)
     portais = []
     if quer_portal:
+        for _ in range(2):
             portal = cria_portal(grafo_criado,lista)
             portais.append(portal)
             
