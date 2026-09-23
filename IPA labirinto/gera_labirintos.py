@@ -1,3 +1,5 @@
+# GERA LABIRINTOS
+
 from random import choice
 import copy # Importante para a função cria_parede não alterar o grafo original antes de verificar
 from itertools import product
@@ -26,7 +28,7 @@ def cria_parede(grafo):
         return novo_grafo 
     tentativas = 0
     # Loop de segurança para tentar encontrar duas casas válidas para separar
-    while tentativas < 100:
+    while tentativas < 10000:
         casa = choice(casas_candidatas)
         parede_criada = choice(novo_grafo[casa])
         if len(novo_grafo[parede_criada]) > 1:
@@ -37,9 +39,11 @@ def cria_parede(grafo):
         
     return novo_grafo 
 
+
+
+
 def verifica_caminhos(grafo):
     primeiro = (0,0)
-
     def dfs(grafo_completo, vertice, visitados=None):
         if visitados is None:
             visitados = set()   
@@ -48,12 +52,33 @@ def verifica_caminhos(grafo):
             if seguinte not in visitados:
                 dfs(grafo_completo, seguinte, visitados)
         return visitados
-    
     quem_esta_ligado_ao_primeiro = dfs(grafo, primeiro)    
     todas_as_casas = set(grafo.keys())
 
     return todas_as_casas == quem_esta_ligado_ao_primeiro
 
+def dfs_lista(grafo_completo, vertice = (0,0), visitados=None):
+    if visitados is None:
+        visitados = []   
+    visitados.append(vertice)                      
+    for seguinte in grafo_completo[vertice]:  
+        if seguinte not in visitados:
+            dfs_lista(grafo_completo, seguinte, visitados)
+    return visitados
+
+def cria_portal(grafo,lista):
+    casas_candidatas = [e for e in lista if e != (0,0)]
+    com_portal = choice(casas_candidatas)
+    return com_portal
+
+def cria_chave(grafo, lista, portais = []):
+    tamanho= int((len(grafo))**(1/2))
+    saida = (tamanho-1,tamanho-1)
+    indice = lista.index(saida)
+    quase_casas_candidatas = lista[(indice+1):]
+    casas_candidatas = [e for e in quase_casas_candidatas if e not in portais]
+    com_chave = choice(casas_candidatas)
+    return com_chave
 
 def criando_o_grafo_final(tamanho_do_grafo):
     inicio = gera_grafo(tamanho_do_grafo)
@@ -70,8 +95,7 @@ def criando_o_grafo_final(tamanho_do_grafo):
                 contador += 1  
         rodou +=1
         
-    return grafo_base
-        
+    return grafo_base 
         
 def desconverte_de_grafo(grafo):
     nao_parede_horizontal = []
@@ -86,7 +110,8 @@ def desconverte_de_grafo(grafo):
                 nao_parede_vertical.append(ligado)
     return nao_parede_horizontal,nao_parede_vertical 
 
-def gerador_labirintos(tamanho_do_grafo = 8):
+
+def gerador_labirintos(tamanho_do_grafo = 8, quer_portal = False, quantas_chaves = 0):
     labirinto = []
     coordenadas1 = [i for i in range(tamanho_do_grafo+1)]
     coordenadas2 = [i for i in range(tamanho_do_grafo)]
@@ -108,6 +133,85 @@ def gerador_labirintos(tamanho_do_grafo = 8):
             lista_v.remove(pv)
     labirinto.append(lista_h)
     labirinto.append(lista_v)
+
+
+    lista = dfs_lista(grafo_criado)
+    saida = (tamanho_do_grafo-1,tamanho_do_grafo-1)
+    indice = lista.index(saida)
+    quantas_chaves_real = min(quantas_chaves,indice)
+    portais = []
+    if quer_portal:
+            portal = cria_portal(grafo_criado,lista)
+            portais.append(portal)
+            
+    chaves = []
+    for _ in range(quantas_chaves_real):
+        chave = cria_chave(grafo_criado,lista, portais)
+        chaves.append(chave) 
+
+    labirinto.append(portais)
+    labirinto.append(chaves)
     return labirinto
 
-gerador_labirintos()
+
+def converte_para_robo(tamanho_do_grafo, labirinto_em_lista):
+    """
+    Pega o formato da lista, da função gerador_labirintos:
+
+    [
+        paredes_horizontais,
+        paredes_verticais,
+        portais,
+        chaves
+    ]
+
+    E converte numa estrura mais compatível com a classe Robo:
+
+    {
+        (x,y): (
+            {'V_e': bool, 'H_s': bool, 'V_s': bool, 'H_e': bool},
+            tem_chave,
+            tem_portal
+        )
+    }
+    """
+
+    paredes_h = labirinto_em_lista[0]
+    paredes_v = labirinto_em_lista[1]
+    portais = labirinto_em_lista[2]
+    chaves = labirinto_em_lista[3]
+
+    labirinto_final = {}
+
+    for x, y in gera_grafo(tamanho_do_grafo):
+
+        paredes = {
+            'V_e': False,
+            'H_s': False,
+            'V_s': False,
+            'H_e': False
+        }
+
+        # Parede na direção vertical sentido entrada
+        if (x, y) in paredes_h:
+            paredes['V_e'] = True
+
+        # Parede na direção vertical sentido saída
+        if (x, y + 1) in paredes_h:
+            paredes['V_s'] = True
+
+        # Parede na direção horizontal sentido entrada
+        if (x, y) in paredes_v:
+            paredes['H_e'] = True
+
+        # Parede na direção horizontal sentido saída
+        if (x + 1, y) in paredes_v:
+            paredes['H_s'] = True
+
+        tem_portal = (x,y) in portais
+        tem_chave = (x, y) in chaves
+
+        labirinto_final[(x,y)] = [paredes,tem_portal,tem_chave]
+
+    return labirinto_final
+
