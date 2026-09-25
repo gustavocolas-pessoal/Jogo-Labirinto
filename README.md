@@ -15,4 +15,4 @@ Projeto que visa oferecer uma maneira lúdica de aprender algoritmos computacion
 ```sh
 pip install -r requirements.txt
 ```
-<img src="Imagens do README\Rodape.png"/> 
+<img src="Imagens do README\Rodapé.png"/> 
