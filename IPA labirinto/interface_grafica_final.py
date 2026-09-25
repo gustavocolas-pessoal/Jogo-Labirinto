@@ -1,3 +1,5 @@
+# INTERFACE GRÁFICA FINAL
+
 import pygame as pg
 import sys
 import gera_labirintos as gl
@@ -6,9 +8,9 @@ import define_algoritmos as da
 
 
 # VARIÁVEIS:
-SIZE = 10
-PORTAL = True 
-QUANTAS_CHAVES = 4
+SIZE = 6
+PORTAL = False 
+QUANTAS_CHAVES = 0
 
 lista_labirintos = [
     gl.gerador_labirintos(
@@ -48,6 +50,7 @@ vermelhin = (150,3,3)
 bege = (194,176,146)
 azulzin = (135,206,235)
 verde_botao = (50, 200, 50)
+laranja_parar = (220, 100, 0)
 
 
 piskel_chave = pg.image.load("imagens/chave.png").convert_alpha()
@@ -57,20 +60,26 @@ piskel_portal = pg.image.load("imagens/portal.png").convert_alpha()
 botao_categoria_logica = pg.Rect(950, 50, 150, 40)
 botao_categoria_sensor = pg.Rect(950, 100, 150, 40)
 botao_categoria_acao = pg.Rect(950, 150, 150, 40)
-botao_executar = pg.Rect(600, 620, 200, 40)
-botao_limpar = pg.Rect(820, 620, 100, 40)
+botao_executar = pg.Rect(600, 620, 130, 40)
+botao_parar = pg.Rect(740, 620, 80, 40)
+botao_limpar = pg.Rect(830, 620, 90, 40)
+
+# Filtro dinâmico das opções de sensores
+sensores_disponiveis = [
+    "tem_parede_frente", 
+    "tem_parede_direita", 
+    "tem_parede_esquerda",
+    "ja_passou_frente",    
+    "ja_passou_direita",   
+    "ja_passou_esquerda",  
+]
+if PORTAL:
+    sensores_disponiveis.append("tem_portal")
+if QUANTAS_CHAVES > 0:
+    sensores_disponiveis.append("tem_chave")
 
 opcoes_por_categoria = {
-    'SENSOR': [
-        "tem_parede_frente", 
-        "tem_parede_direita", 
-        "tem_parede_esquerda",
-        "ja_passou_frente",    
-        "ja_passou_direita",   
-        "ja_passou_esquerda",  
-        "tem_portal",
-        "tem_chave"
-    ],
+    'SENSOR': sensores_disponiveis,
     'AÇÃO': [
         "anda_reto", 
         "recua", 
@@ -81,7 +90,7 @@ opcoes_por_categoria = {
     ],
     'LÓGICA': [
         "se", 
-        "senao", # identico ao "elif", pensando se muda o nome pra ficar mais claro
+        "senao", 
         "e", 
         "ou", 
         "nao",
@@ -199,17 +208,30 @@ def desenha_botoes():
         tela.blit(arial_pequena.render("Clique em uma função", True, preto), (960, 220))
 
     pg.draw.rect(tela, verde_botao, botao_executar) 
-    tela.blit(arial_pequena.render("EXECUTAR", True, branco), (botao_executar.x + 50, botao_executar.y + 10))
+    tela.blit(arial_pequena.render("EXECUTAR", True, branco), (botao_executar.x + 15, botao_executar.y + 10))
+
+    pg.draw.rect(tela, laranja_parar, botao_parar)
+    tela.blit(arial_pequena.render("PARAR", True, branco), (botao_parar.x + 10, botao_parar.y + 10))
     
     pg.draw.rect(tela, vermelhin, botao_limpar)
-    tela.blit(arial_pequena.render("LIMPAR", True, branco), (botao_limpar.x + 19, botao_limpar.y + 10))
+    tela.blit(arial_pequena.render("LIMPAR", True, branco), (botao_limpar.x + 12, botao_limpar.y + 10))
+
+def checar_parada():
+    """Captura cliques e teclas pressionadas durante a execução da animação para interromper."""
+    global tentou_parar
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            pg.quit()
+            sys.exit()
+        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if botao_parar.collidepoint(event.pos):
+                tentou_parar = True
+        elif event.type == pg.KEYDOWN:
+            if event.key == pg.K_SPACE:
+                tentou_parar = True
+    return tentou_parar
 
 def atualiza_tela_animacao():
-    """
-    redesenha a tela toda vez que o robô der um passo.
-    """
-    pg.event.pump() # CORREÇÃO: Evita que o Windows ache que o jogo "Travou" (Not Responding)
-    
     tela.fill(branco)
     desenha_grade()
     if desenhar_labirinto:
@@ -221,7 +243,7 @@ def atualiza_tela_animacao():
     desenha_botoes()
     
     pg.display.flip()
-    pg.time.delay(300) 
+    pg.time.delay(100) 
 
 
 rodando = True
@@ -257,15 +279,19 @@ while rodando:
                     algoritmo_montado.clear()
                     categoria_atual = None
                     robo.reset(inicio=(0, 0), orientacao='H_s')
+
+                if botao_parar.collidepoint(pos_mouse):
+                    tentou_parar = True
                     
                 if botao_executar.collidepoint(pos_mouse):
+                    tentou_parar = False
                     robo.reset(inicio=(0, 0), orientacao='H_s')
                     print(f"Executando lógica montada: {algoritmo_montado}")
                     
                     da.executar_algoritmo_customizado(
                         robo, 
                         algoritmo_montado, 
-                        tentou_parar,
+                        tentou_parar_func=checar_parada,
                         funcao_de_desenho=atualiza_tela_animacao,
                     )
 
@@ -273,8 +299,6 @@ while rodando:
 
             if event.key == pg.K_SPACE:
                 tentou_parar = True
-                rodando = False
-                
 
             elif event.key == pg.K_l:
                 desenhar_labirinto = not desenhar_labirinto
