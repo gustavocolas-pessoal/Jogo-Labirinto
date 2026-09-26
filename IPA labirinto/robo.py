@@ -48,7 +48,7 @@ class Robo:
         )
 
     def posicao(self):
-        pos = self.x,self.y
+        pos = self.x, self.y
         return pos
     
     def tem_parede_frente(self):
@@ -74,8 +74,8 @@ class Robo:
             self.labirinto[self.posicao()][PAREDES]
         )
 
+    # --- MEMÓRIA RELATIVA ---
     def ja_passou_frente(self):
-        # Primeiro verifica se tem parede. Se tiver, não há como ter passado lá.
         if self.tem_parede_frente(): 
             return False
         dx, dy = DELTA[self.orientacao]
@@ -98,6 +98,42 @@ class Robo:
         dx, dy = DELTA[esquerda]
         return (self.x + dx, self.y + dy) in self.ja_passou
 
+    def ja_passou_atras(self):
+        if self.tem_parede_atras(): 
+            return False
+        i = DIRECOES.index(self.orientacao)
+        atras = DIRECOES[(i + 2) % 4]
+        dx, dy = DELTA[atras]
+        return (self.x + dx, self.y + dy) in self.ja_passou
+
+    
+    def ja_passou_norte(self):
+        if self.labirinto[self.posicao()][PAREDES]['V_e']:
+            return False
+        dx, dy = DELTA['V_e']
+        return (self.x + dx, self.y + dy) in self.ja_passou
+
+    def ja_passou_sul(self):
+        if self.labirinto[self.posicao()][PAREDES]['V_s']:
+            return False
+        dx, dy = DELTA['V_s']
+        return (self.x + dx, self.y + dy) in self.ja_passou
+
+    def ja_passou_leste(self):
+        if self.labirinto[self.posicao()][PAREDES]['H_s']:
+            return False
+        dx, dy = DELTA['H_s']
+        return (self.x + dx, self.y + dy) in self.ja_passou
+
+    def ja_passou_oeste(self):
+        if self.labirinto[self.posicao()][PAREDES]['H_e']:
+            return False
+        dx, dy = DELTA['H_e']
+        return (self.x + dx, self.y + dy) in self.ja_passou
+
+    def limpar_memoria_passos(self):
+        self.ja_passou = [self.posicao()]
+
     def tem_portal(self):
         return self.labirinto[self.posicao()][PORTAL]
 
@@ -113,14 +149,15 @@ class Robo:
         indice = portais.index(self.posicao())
         destino = portais[indice - 1]
         self.x, self.y = destino
-        self.ja_passou.append(destino)
+        if destino not in self.ja_passou:
+            self.ja_passou.append(destino)
 
         if len(portais) < 2:
-                    return False
+            return False
         return self.posicao() == self.objetivo and len(self.chaves_coletadas) == self.total_chaves
 
     def tem_chave(self):
-            return self.labirinto[self.posicao()][CHAVE]
+        return self.labirinto[self.posicao()][CHAVE]
 
     def coleta_chave(self):
         if self.tem_chave():
@@ -133,7 +170,8 @@ class Robo:
             dx, dy = DELTA[self.orientacao]
             self.x += dx
             self.y += dy
-            self.ja_passou.append(self.posicao())
+            if self.posicao() not in self.ja_passou:
+                self.ja_passou.append(self.posicao())
             self.coleta_chave()
             self.teletransporta()
             self.passos += 1
@@ -148,7 +186,8 @@ class Robo:
             dx, dy = DELTA[orientacao_oposta]
             self.x += dx
             self.y += dy
-            self.ja_passou.append(self.posicao())
+            if self.posicao() not in self.ja_passou:
+                self.ja_passou.append(self.posicao())
             self.coleta_chave()
             self.teletransporta()
         self.passos += 1
@@ -165,6 +204,20 @@ class Robo:
         self.vira_direita()
         self.vira_direita()
 
+    def anda_bussola(self, direcao_absoluta):
+        if not self.labirinto[self.posicao()][PAREDES][direcao_absoluta]:
+            dx, dy = DELTA[direcao_absoluta]
+            self.x += dx
+            self.y += dy
+            if self.posicao() not in self.ja_passou:
+                self.ja_passou.append(self.posicao())
+            self.coleta_chave()
+            self.teletransporta()
+            self.passos += 1
+            return True
+        self.passos += 1
+        return False
+
     def anda_aleatorio(self, n=1):
         for _ in range(n):
             livres = [
@@ -175,10 +228,6 @@ class Robo:
             if livres:
                 self.orientacao = random.choice(livres)
                 self.anda_reto()
-
-    def chegou_no_objetivo(self):
-        return self.posicao() == self.objetivo
-
 
     def reset(self, inicio=(0, 0), orientacao='H_s'):
         self.x, self.y = inicio
