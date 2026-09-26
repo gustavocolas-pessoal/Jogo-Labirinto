@@ -6,7 +6,10 @@ import gera_labirintos as gl
 from robo import Robo
 import define_algoritmos as da  
 
-# VARIÁVEIS
+
+
+# VARIÁVEIS GLOBAIS DE CONFIGURAÇÃO
+
 SIZE = 6
 PORTAL = False 
 QUANTAS_CHAVES = 0
@@ -17,62 +20,45 @@ largura = 1300
 altura = 700
 
 tela = pg.display.set_mode((largura, altura))
-pg.display.set_caption("Perdidos na Lógica - Labirinto do Robô")
-
-# ------------------------------------------------------------------------------
-# PALETA DE CORES MODERNA (DARK MODE / PASTEL BALANCEADO)
-# ------------------------------------------------------------------------------
-BG_DARK = (30, 30, 46)          # Fundo geral
-PANEL_BG = (42, 42, 61)         # Painéis e cartões
-PANEL_BORDER = (60, 60, 85)     # Bordas discretas
-TEXT_WHITE = (240, 240, 245)     # Texto principal
-TEXT_MUTED = (160, 160, 185)     # Texto secundário
-
-ACCENT_CYAN = (0, 210, 255)     # Destaque primário (Ciano)
-ACCENT_GREEN = (0, 230, 118)    # Botão JOGAR
-ACCENT_GREEN_HOVER = (50, 255, 150)
-ACCENT_PURPLE = (180, 130, 255) # Elementos de memória/secundários
+pg.display.set_caption("LABIRINTO DO ROBÔ - PERDIDOS NA LÓGICA")
 
 
 branco = (230, 230, 230)
+branco_puro = (255, 255, 255)
 preto = (0, 0, 0)
-vermelhin = (230, 70, 70)
+vermelhin = (150, 3, 3)
 bege = (194, 176, 146)
 azulzin = (135, 206, 235)
-verde_botao = (0, 200, 100)
-laranja_parar = (230, 120, 20)
+azul_destaque = (100, 180, 225)
+verde_botao = (50, 200, 50)
+verde_hover = (40, 220, 40)
+laranja_parar = (220, 100, 0)
 roxo_memoria = (180, 150, 220)
+cinza_escuro = (100, 100, 100)
 
-
-font_titulo = pg.font.SysFont("Segoe UI", 42, bold=True)
-font_subtitulo = pg.font.SysFont("Segoe UI", 16)
-font_label = pg.font.SysFont("Segoe UI", 20, bold=True)
-font_valor = pg.font.SysFont("Segoe UI", 28, bold=True)
+arial_titulo = pg.font.SysFont("Arial", 44, bold=True)
+arial_subtitulo = pg.font.SysFont("Arial", 16, bold=True)
 arial = pg.font.SysFont("Arial", 30)
 arial_pequena = pg.font.SysFont("Arial", 15)
 
-
-# IMPORTANTE - TALVEZ TENHA QUE MUDAR O CAMINHO DDA IMAGEM PARA RODAR NA MÁQUINA
-piskel_chave = pg.image.load("imagens/chave.png").convert_alpha() 
+piskel_chave = pg.image.load("imagens/chave.png").convert_alpha()
 piskel_portal = pg.image.load("imagens/portal.png").convert_alpha()
 piskel_robo = pg.image.load("imagens/robo_atualizado.png").convert_alpha()
 
+# PRA TELA INICIAL
+caixa_principal = pg.Rect(390, 50, 520, 480)
 
-painel_central = pg.Rect(largura // 2 - 260, 60, 520, 460)
+botao_size_menos = pg.Rect(530, 250, 45, 45)
+botao_size_mais = pg.Rect(725, 250, 45, 45)
 
-botao_size_menos = pg.Rect(largura // 2 - 110, 250, 48, 48)
-botao_size_mais = pg.Rect(largura // 2 + 62, 250, 48, 48)
+botao_jogar = pg.Rect(470, 360, 360, 55)
 
-botao_jogar = pg.Rect(largura // 2 - 180, 355, 360, 62)
+caixa_inferior = pg.Rect(390, 550, 520, 95)
+botao_toggle_portal = pg.Rect(415, 585, 210, 40)
+botao_chave_menos = pg.Rect(740, 585, 35, 35)
+botao_chave_mais = pg.Rect(845, 585, 35, 35)
 
-
-
-painel_inferior = pg.Rect(largura // 2 - 260, 540, 520, 100)
-botao_toggle_portal = pg.Rect(largura // 2 - 230, 580, 200, 42)
-botao_chave_menos = pg.Rect(largura // 2 + 70, 580, 38, 38)
-botao_chave_mais = pg.Rect(largura // 2 + 180, 580, 38, 38)
-
-
+# PRA TELA DO JOGO
 botao_categoria_logica = pg.Rect(950, 45, 150, 35)
 botao_categoria_sensor = pg.Rect(950, 85, 150, 35)
 botao_categoria_acao = pg.Rect(950, 125, 150, 35)
@@ -81,9 +67,11 @@ botao_categoria_memoria = pg.Rect(950, 165, 150, 35)
 botao_executar = pg.Rect(600, 620, 130, 40)
 botao_parar = pg.Rect(740, 620, 80, 40)
 botao_limpar = pg.Rect(830, 620, 90, 40)
-botao_voltar_menu = pg.Rect(50, 640, 120, 35)
+botao_voltar_menu = pg.Rect(50, 630, 120, 35)
 
 
+
+# Variáveis pro jogo de fato
 lista_labirintos = []
 qual_labirinto = None
 labirinto_robo = None
@@ -111,7 +99,7 @@ def define_o_labirinto(tamanho_do_labirinto=SIZE):
 
 
 def inicializar_jogo():
-    """Inicializa as estruturas do jogo com base nas configurações da tela inicial."""
+    """Inicializa/reinicia as estruturas do jogo com base na configuração da tela inicial."""
     global lista_labirintos, qual_labirinto, labirinto_robo, robo
     global labirinto, coords, tamanho_do_labirinto, tamanho_celula
     global chave_redimensionada, portal_redimensionado, robo_redimensionado
@@ -148,10 +136,10 @@ def inicializar_jogo():
             "vira_direita", 
             "vira_esquerda", 
             "vira_180",
-            ("anda_bussola", "V_e"),
-            ("anda_bussola", "V_s"),
-            ("anda_bussola", "H_s"),
-            ("anda_bussola", "H_e"),
+            ("anda_absoluto", "V_e"),
+            ("anda_absoluto", "V_s"),
+            ("anda_absoluto", "H_s"),
+            ("anda_absoluto", "H_e"),
             "anda_aleatorio"
         ],
         'LÓGICA': ["se", "senao", "e", "ou", "nao", "(", ")"],
@@ -229,16 +217,16 @@ def desenha_botoes():
     botoes_sub_ativos.clear() 
 
     caixa_alg = pg.Rect(600, 50, 320, 550)
-    pg.draw.rect(tela, branco, caixa_alg) 
+    pg.draw.rect(tela, branco_puro, caixa_alg) 
     pg.draw.rect(tela, preto, caixa_alg, 2) 
     tela.blit(arial.render("ALGORITMO MONTADO:", True, preto), (600, 10))
 
     y_algoritmo = 60
     for i, bloco in enumerate(algoritmo_montado):
         if isinstance(bloco, tuple):
-            if bloco[0] == "anda_bussola":
+            if bloco[0] == "anda_absoluto":
                 rotulos = {'V_e': 'norte', 'V_s': 'sul', 'H_s': 'leste', 'H_e': 'oeste'}
-                texto_str = f"anda_bussola_{rotulos.get(bloco[1], bloco[1])}"
+                texto_str = f"anda_absoluto({rotulos.get(bloco[1], bloco[1])})"
             else:
                 texto_str = f"{bloco[0]} ({bloco[1:]})"
         else:
@@ -285,9 +273,9 @@ def desenha_botoes():
             pg.draw.rect(tela, preto, botao_opcao, 1)
             
             if isinstance(opcao, tuple):
-                if opcao[0] == "anda_bussola":
+                if opcao[0] == "anda_absoluto":
                     rotulos = {'V_e': 'norte', 'V_s': 'sul', 'H_s': 'leste', 'H_e': 'oeste'}
-                    nome_exibir = f"anda_bussola_{rotulos.get(opcao[1], opcao[1])}"
+                    nome_exibir = f"anda_absoluto ({rotulos.get(opcao[1], opcao[1])})"
                 else:
                     nome_exibir = f"{opcao[0]}: {opcao[1]}"
             else:
@@ -300,17 +288,21 @@ def desenha_botoes():
         tela.blit(arial_pequena.render("Clique em uma função", True, preto), (960, 220))
 
     pg.draw.rect(tela, verde_botao, botao_executar) 
-    tela.blit(arial_pequena.render("EXECUTAR", True, branco), (botao_executar.x + 15, botao_executar.y + 10))
+    pg.draw.rect(tela, preto, botao_executar, 2)
+    tela.blit(arial_pequena.render("EXECUTAR", True, branco_puro), (botao_executar.x + 15, botao_executar.y + 10))
 
     pg.draw.rect(tela, laranja_parar, botao_parar)
-    tela.blit(arial_pequena.render("PARAR", True, branco), (botao_parar.x + 10, botao_parar.y + 10))
+    pg.draw.rect(tela, preto, botao_parar, 2)
+    tela.blit(arial_pequena.render("PARAR", True, branco_puro), (botao_parar.x + 10, botao_parar.y + 10))
     
     pg.draw.rect(tela, vermelhin, botao_limpar)
-    tela.blit(arial_pequena.render("LIMPAR", True, branco), (botao_limpar.x + 12, botao_limpar.y + 10))
+    pg.draw.rect(tela, preto, botao_limpar, 2)
+    tela.blit(arial_pequena.render("LIMPAR", True, branco_puro), (botao_limpar.x + 12, botao_limpar.y + 10))
 
-    pg.draw.rect(tela, PANEL_BG, botao_voltar_menu, border_radius=6)
-    pg.draw.rect(tela, ACCENT_CYAN, botao_voltar_menu, 2, border_radius=6)
-    tela.blit(arial_pequena.render("< MENU", True, TEXT_WHITE), (botao_voltar_menu.x + 22, botao_voltar_menu.y + 8))
+    # Botão para voltar ao Menu Inicial
+    pg.draw.rect(tela, bege, botao_voltar_menu)
+    pg.draw.rect(tela, preto, botao_voltar_menu, 2)
+    tela.blit(arial_pequena.render("< MENU", True, preto), (botao_voltar_menu.x + 20, botao_voltar_menu.y + 8))
 
 
 def checar_parada():
@@ -341,99 +333,106 @@ def atualiza_tela_animacao():
     pg.time.delay(100) 
 
 
-# ==============================================================================
-# 3. TELA INICIAL REFATORADA 
-# ==============================================================================
-def desenha_botao_arredondado(superficie, rect, cor_fundo, cor_borda, texto, fonte, cor_texto, radius=12, espessura_borda=2):
-    """Desenha um botão com cantos arredondados, borda e texto centralizado."""
-    pg.draw.rect(superficie, cor_fundo, rect, border_radius=radius)
-    if espessura_borda > 0:
-        pg.draw.rect(superficie, cor_borda, rect, espessura_borda, border_radius=radius)
-    
-    txt_surface = fonte.render(texto, True, cor_texto)
-    txt_rect = txt_surface.get_rect(center=rect.center)
-    superficie.blit(txt_surface, txt_rect)
-
 
 def desenha_tela_inicio():
-    """Renderiza a interface da tela inicial refinada com visual moderno e polished UI."""
+    """Renderiza a tela inicial alinhada ao estilo visual plano do jogo."""
     pos_mouse = pg.mouse.get_pos()
-    tela.fill(BG_DARK)
+    tela.fill(branco)
 
     # --------------------------------------------------------------------------
-    # 1. PAINEL CENTRAL PRINCIPAL
+    # 1. PAINEL PRINCIPAL (CAIXA BEGE IGUAL ÀS SEÇÕES DO JOGO)
     # --------------------------------------------------------------------------
-    pg.draw.rect(tela, PANEL_BG, painel_central, border_radius=20)
-    pg.draw.rect(tela, PANEL_BORDER, painel_central, 2, border_radius=20)
+    pg.draw.rect(tela, bege, caixa_principal)
+    pg.draw.rect(tela, preto, caixa_principal, 2)
 
-    # Título Principal com Sombra Projetada (Drop Shadow)
-    txt_sombra = font_titulo.render("Perdidos na Lógica", True, (10, 10, 20))
-    txt_titulo = font_titulo.render("Perdidos na Lógica", True, ACCENT_CYAN)
-    tela.blit(txt_sombra, (largura // 2 - txt_titulo.get_width() // 2 + 3, 103))
-    tela.blit(txt_titulo, (largura // 2 - txt_titulo.get_width() // 2, 100))
+    # Título Principal
+    txt_titulo = arial_titulo.render("PERDIDOS NA LÓGICA", True, preto)
+    tela.blit(txt_titulo, (largura // 2 - txt_titulo.get_width() // 2, 90))
 
-    # Subtítulo Elegante
-    txt_sub = font_subtitulo.render("PROGRAMAÇÃO & LÓGICA DE NAVEGAÇÃO", True, TEXT_MUTED)
-    tela.blit(txt_sub, (largura // 2 - txt_sub.get_width() // 2, 155))
+    # Subtítulo de Apoio
+    txt_sub = arial_subtitulo.render("LABIRINTO DO ROBÔ", True, vermelhin)
+    tela.blit(txt_sub, (largura // 2 - txt_sub.get_width() // 2, 145))
 
     # --------------------------------------------------------------------------
     # 2. SELETOR DE TAMANHO DO LABIRINTO (SIZE)
     # --------------------------------------------------------------------------
-    txt_label_size = font_label.render("Tamanho do Labirinto", True, TEXT_WHITE)
-    tela.blit(txt_label_size, (largura // 2 - txt_label_size.get_width() // 2, 215))
+    txt_size_label = arial_pequena.render("TAMANHO DO LABIRINTO:", True, preto)
+    tela.blit(txt_size_label, (largura // 2 - txt_size_label.get_width() // 2, 215))
 
-    # Caixa central com o número
-    caixa_valor_size = pg.Rect(largura // 2 - 45, 250, 90, 48)
-    pg.draw.rect(tela, BG_DARK, caixa_valor_size, border_radius=10)
-    pg.draw.rect(tela, PANEL_BORDER, caixa_valor_size, 1, border_radius=10)
-    
-    txt_val_size = font_valor.render(f"{SIZE}x{SIZE}", True, ACCENT_CYAN)
-    tela.blit(txt_val_size, txt_val_size.get_rect(center=caixa_valor_size.center))
+    # Display numérico do tamanho
+    caixa_valor_size = pg.Rect(590, 250, 120, 45)
+    pg.draw.rect(tela, branco_puro, caixa_valor_size)
+    pg.draw.rect(tela, preto, caixa_valor_size, 2)
+
+    txt_size_val = arial.render(f"{SIZE} x {SIZE}", True, preto)
+    tela.blit(txt_size_val, txt_size_val.get_rect(center=caixa_valor_size.center))
 
     # Botão (-) Tamanho
-    hover_menos = botao_size_menos.collidepoint(pos_mouse)
-    cor_btn_menos = ACCENT_CYAN if hover_menos else PANEL_BORDER
-    desenha_botao_arredondado(tela, botao_size_menos, PANEL_BG, cor_btn_menos, "-", font_valor, TEXT_WHITE, radius=10)
+    cor_btn_menos = azul_destaque if botao_size_menos.collidepoint(pos_mouse) else azulzin
+    pg.draw.rect(tela, cor_btn_menos, botao_size_menos)
+    pg.draw.rect(tela, preto, botao_size_menos, 2)
+    txt_menos = arial.render("-", True, preto)
+    tela.blit(txt_menos, txt_menos.get_rect(center=botao_size_menos.center))
 
     # Botão (+) Tamanho
-    hover_mais = botao_size_mais.collidepoint(pos_mouse)
-    cor_btn_mais = ACCENT_CYAN if hover_mais else PANEL_BORDER
-    desenha_botao_arredondado(tela, botao_size_mais, PANEL_BG, cor_btn_mais, "+", font_valor, TEXT_WHITE, radius=10)
+    cor_btn_mais = azul_destaque if botao_size_mais.collidepoint(pos_mouse) else azulzin
+    pg.draw.rect(tela, cor_btn_mais, botao_size_mais)
+    pg.draw.rect(tela, preto, botao_size_mais, 2)
+    txt_mais = arial.render("+", True, preto)
+    tela.blit(txt_mais, txt_mais.get_rect(center=botao_size_mais.center))
 
     # --------------------------------------------------------------------------
     # 3. BOTÃO PRINCIPAL "JOGAR"
     # --------------------------------------------------------------------------
-    hover_jogar = botao_jogar.collidepoint(pos_mouse)
-    cor_fundo_jogar = ACCENT_GREEN_HOVER if hover_jogar else ACCENT_GREEN
-    desenha_botao_arredondado(tela, botao_jogar, cor_fundo_jogar, ACCENT_GREEN_HOVER, "JOGAR", font_label, BG_DARK, radius=16, espessura_borda=0)
+    cor_jogar = verde_hover if botao_jogar.collidepoint(pos_mouse) else verde_botao
+    pg.draw.rect(tela, cor_jogar, botao_jogar)
+    pg.draw.rect(tela, preto, botao_jogar, 2)
+    txt_jogar = arial.render("JOGAR", True, branco_puro)
+    tela.blit(txt_jogar, txt_jogar.get_rect(center=botao_jogar.center))
 
     # --------------------------------------------------------------------------
-    # 4. OPÇÕES AVANÇADAS / RODAPÉ ELEGANTE
+    # 4. OPÇÕES ESCONDIDAS / RODAPÉ (PORTAIS E CHAVES)
     # --------------------------------------------------------------------------
-    pg.draw.rect(tela, PANEL_BG, painel_inferior, border_radius=16)
-    pg.draw.rect(tela, PANEL_BORDER, painel_inferior, 1, border_radius=16)
+    pg.draw.rect(tela, branco_puro, caixa_inferior)
+    pg.draw.rect(tela, preto, caixa_inferior, 2)
 
-    # Toggle Portais
-    hover_portal = botao_toggle_portal.collidepoint(pos_mouse)
-    cor_bg_portal = (55, 55, 80) if hover_portal else BG_DARK
-    cor_borda_portal = ACCENT_CYAN if PORTAL else PANEL_BORDER
-    texto_portal = "PORTAIS: LIGADO" if PORTAL else "PORTAIS: DESLIGADO"
-    cor_texto_portal = ACCENT_CYAN if PORTAL else TEXT_MUTED
-    desenha_botao_arredondado(tela, botao_toggle_portal, cor_bg_portal, cor_borda_portal, texto_portal, font_subtitulo, cor_texto_portal, radius=10)
+    # Toggle de Portais
+    cor_portal = azulzin if PORTAL else bege
+    if botao_toggle_portal.collidepoint(pos_mouse):
+        cor_portal = azul_destaque if PORTAL else (210, 195, 165)
+    
+    pg.draw.rect(tela, cor_portal, botao_toggle_portal)
+    pg.draw.rect(tela, preto, botao_toggle_portal, 2)
+    txt_portal_status = "PORTAIS: ATIVOS" if PORTAL else "PORTAIS: INATIVOS"
+    txt_portal = arial_pequena.render(txt_portal_status, True, preto)
+    tela.blit(txt_portal, txt_portal.get_rect(center=botao_toggle_portal.center))
 
-    # Controlo de Chaves
-    txt_chaves_label = font_subtitulo.render(f"CHAVES: {QUANTAS_CHAVES}", True, TEXT_WHITE)
-    tela.blit(txt_chaves_label, (largura // 2 + 10, 550))
+    # Quantidade de Chaves
+    txt_chaves_label = arial_pequena.render("CHAVES:", True, preto)
+    tela.blit(txt_chaves_label, (680, 595))
 
-    hover_ch_menos = botao_chave_menos.collidepoint(pos_mouse)
-    cor_ch_menos = ACCENT_PURPLE if hover_ch_menos else PANEL_BORDER
-    desenha_botao_arredondado(tela, botao_chave_menos, BG_DARK, cor_ch_menos, "-", font_label, TEXT_WHITE, radius=8)
+    caixa_val_chave = pg.Rect(785, 585, 50, 35)
+    pg.draw.rect(tela, roxo_memoria, caixa_val_chave)
+    pg.draw.rect(tela, preto, caixa_val_chave, 2)
+    txt_val_chaves = arial_pequena.render(str(QUANTAS_CHAVES), True, preto)
+    tela.blit(txt_val_chaves, txt_val_chaves.get_rect(center=caixa_val_chave.center))
 
-    hover_ch_mais = botao_chave_mais.collidepoint(pos_mouse)
-    cor_ch_mais = ACCENT_PURPLE if hover_ch_mais else PANEL_BORDER
-    desenha_botao_arredondado(tela, botao_chave_mais, BG_DARK, cor_ch_mais, "+", font_label, TEXT_WHITE, radius=8)
+    # Botão (-) Chaves
+    cor_ch_menos = azul_destaque if botao_chave_menos.collidepoint(pos_mouse) else azulzin
+    pg.draw.rect(tela, cor_ch_menos, botao_chave_menos)
+    pg.draw.rect(tela, preto, botao_chave_menos, 2)
+    txt_ch_menos = arial_pequena.render("-", True, preto)
+    tela.blit(txt_ch_menos, txt_ch_menos.get_rect(center=botao_chave_menos.center))
+
+    # Botão (+) Chaves
+    cor_ch_mais = azul_destaque if botao_chave_mais.collidepoint(pos_mouse) else azulzin
+    pg.draw.rect(tela, cor_ch_mais, botao_chave_mais)
+    pg.draw.rect(tela, preto, botao_chave_mais, 2)
+    txt_ch_mais = arial_pequena.render("+", True, preto)
+    tela.blit(txt_ch_mais, txt_ch_mais.get_rect(center=botao_chave_mais.center))
 
     pg.display.flip()
+
 
 rodando = True
 desenhar_labirinto = True
@@ -442,7 +441,7 @@ categoria_atual = None
 botoes_sub_ativos = [] 
 algoritmo_montado = [] 
 tentou_parar = False
-estado = "inicio"  
+estado = "inicio"
 
 while rodando:
 
@@ -454,13 +453,12 @@ while rodando:
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 pos_mouse = event.pos
                 
-                # Ajusta tamanho do labirinto (3x3 até 15x15)
+                # Ajusta tamanho do labirinto (3x3 até 25x25)
                 if botao_size_menos.collidepoint(pos_mouse) and SIZE > 3:
                     SIZE -= 1
-                elif botao_size_mais.collidepoint(pos_mouse) and SIZE < 15:
+                elif botao_size_mais.collidepoint(pos_mouse) and SIZE < 25:
                     SIZE += 1
                 
-                # Opções de Portais e Chaves
                 elif botao_toggle_portal.collidepoint(pos_mouse):
                     PORTAL = not PORTAL
                 elif botao_chave_menos.collidepoint(pos_mouse) and QUANTAS_CHAVES > 0:
@@ -468,7 +466,6 @@ while rodando:
                 elif botao_chave_mais.collidepoint(pos_mouse) and QUANTAS_CHAVES < 5:
                     QUANTAS_CHAVES += 1
 
-                # Iniciar o jogo
                 elif botao_jogar.collidepoint(pos_mouse):
                     inicializar_jogo()
                     estado = "jogo"
@@ -546,15 +543,14 @@ while rodando:
                     robo = Robo(labirinto_robo, SIZE, SIZE)
 
                 elif event.key == pg.K_UP:
-                    robo.anda_bussola('V_e')     
+                    robo.anda_absoluto('V_e')     
                 elif event.key == pg.K_DOWN:
-                    robo.anda_bussola('V_s')     
+                    robo.anda_absoluto('V_s')     
                 elif event.key == pg.K_RIGHT:
-                    robo.anda_bussola('H_s')     
+                    robo.anda_absoluto('H_s')     
                 elif event.key == pg.K_LEFT:
-                    robo.anda_bussola('H_e')     
+                    robo.anda_absoluto('H_e')     
 
-        # renderização do jogo apenas quando o estado for "jogo"
         tela.fill(branco)
         desenha_grade()
         if desenhar_labirinto:
