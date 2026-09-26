@@ -106,7 +106,6 @@ class Robo:
         dx, dy = DELTA[atras]
         return (self.x + dx, self.y + dy) in self.ja_passou
 
-    
     def ja_passou_norte(self):
         if self.labirinto[self.posicao()][PAREDES]['V_e']:
             return False
@@ -217,6 +216,9 @@ class Robo:
             return True
         self.passos += 1
         return False
+
+    # Alias para garantir compatibilidade se a GUI enviar 'anda_absoluto'
+    anda_absoluto = anda_bussola
 
     def anda_aleatorio(self, n=1):
         for _ in range(n):
