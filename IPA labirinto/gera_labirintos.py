@@ -39,9 +39,6 @@ def cria_parede(grafo):
         
     return novo_grafo 
 
-
-
-
 def verifica_caminhos(grafo):
     primeiro = (0,0)
     def dfs(grafo_completo, vertice, visitados=None):
@@ -110,6 +107,28 @@ def desconverte_de_grafo(grafo):
                 nao_parede_vertical.append(ligado)
     return nao_parede_horizontal,nao_parede_vertical 
 
+def calcula_distancias(grafo, vertice_inicial):
+    """Calcula as distâncias entre o vértice inicial e os demais vértices de um grafo"""
+    p = grafo.get(vertice_inicial)
+    if p == None:
+        print("caiu aqui")
+        return {}
+    # if vertice_inicial not in grafo:
+    #     print("caiu aqui")
+    #     return {}
+    distancia = {
+        vertice_inicial: 0
+    } 
+    fila = [vertice_inicial]
+    while fila:
+        posicao_atual = fila.pop(0)
+        distancia_ate_onde_estou = distancia[posicao_atual]
+        distancia_vizinho = distancia_ate_onde_estou + 1
+        for vizinho in grafo[posicao_atual]:
+            if vizinho not in distancia:
+                fila.append(vizinho)
+                distancia[vizinho] = distancia_vizinho
+    return distancia
 
 def gerador_labirintos(tamanho_do_grafo = 8, quer_portal = False, quantas_chaves = 0):
     labirinto = []
@@ -148,10 +167,13 @@ def gerador_labirintos(tamanho_do_grafo = 8, quer_portal = False, quantas_chaves
     chaves = []
     for _ in range(quantas_chaves_real):
         chave = cria_chave(grafo_criado,lista, portais)
-        chaves.append(chave) 
+        chaves.append(chave)
+
+    tamanho_caminho_mais_rapido = (calcula_distancias(grafo_criado,(0,0)))[saida]
 
     labirinto.append(portais)
     labirinto.append(chaves)
+    labirinto.append(tamanho_caminho_mais_rapido)
     return labirinto
 
 
@@ -217,4 +239,3 @@ def converte_para_robo(tamanho_do_grafo, labirinto_em_lista):
     labirinto_final[(tamanho_do_grafo-1,tamanho_do_grafo-1)][0]['H_s'] = True
 
     return labirinto_final
-
