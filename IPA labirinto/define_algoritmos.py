@@ -27,16 +27,13 @@ def executar_algoritmo_customizado(
     ]
     
     def executar_bloco(tokens, idx):
-        """
-        Interpreta recursivamente a lista de tokens.
-        Retorna (acoes_executadas, novo_idx).
-        """
         if idx >= len(tokens):
             return False, idx
 
         comando = tokens[idx]
 
-        if isinstance(comando, tuple) and comando[0] == 'anda_bussola':
+        # Aceita tanto 'anda_bussola' quanto 'anda_absoluto'
+        if isinstance(comando, tuple) and comando[0] in ['anda_bussola', 'anda_absoluto']:
             robo.anda_bussola(comando[1])
             return True, idx + 1
 
@@ -46,7 +43,6 @@ def executar_algoritmo_customizado(
 
         elif comando == 'se':
             idx += 1
-
             
             condicao_tokens = []
             if idx < len(tokens) and tokens[idx] == '(':
@@ -64,11 +60,10 @@ def executar_algoritmo_customizado(
                         condicao_tokens.append(tokens[idx])
                     idx += 1
             else:
-                # Se não usou parênteses na condição, pega tokens até a próxima ação/parêntese/palavra reservada
                 while (idx < len(tokens) and 
                        tokens[idx] not in acoes_simples and 
-                       not isinstance(tokens[idx], tuple) and 
-                       tokens[idx] not in ['se', 'senao', '(']):
+                       not (isinstance(tokens[idx], tuple) and tokens[idx][0] in ['anda_bussola', 'anda_absoluto']) and 
+                       tokens[idx] not in ['se', 'senao', '(', ')']):
                     condicao_tokens.append(tokens[idx])
                     idx += 1
 
@@ -92,7 +87,6 @@ def executar_algoritmo_customizado(
                 except Exception:
                     condicao_verdadeira = False
 
-            
             acoes_se_tokens = []
             if idx < len(tokens) and tokens[idx] == '(':
                 idx += 1
@@ -150,7 +144,6 @@ def executar_algoritmo_customizado(
 
             return fez_acao, idx
 
-        # 3. SENAO ISOLADO (caso seja colocado fora do 'se')
         elif comando == 'senao':
             idx += 1
             if idx < len(tokens) and tokens[idx] == '(':
@@ -194,7 +187,6 @@ def executar_algoritmo_customizado(
 
         acao_executada, novo_i = executar_bloco(lista_dos_comandos, i)
         
-        # se nenhuma instrução avançou o índice, incrementa para evitar loop infinito
         if novo_i == i:
             i += 1
         else:
